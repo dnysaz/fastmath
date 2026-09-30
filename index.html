@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FastMath — Latihan Hitung Cepat</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236c8cff'/%3E%3Ctext x='50' y='72' font-size='64' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='%23061020'%3E%E2%88%91%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">&plusmn;</span>
+      <div>
+        <h1>FastMath</h1>
+        <p>Hitung cepat, refleks, tepat.</p>
+      </div>
+    </div>
+
+    <section class="group">
+      <h2 class="group-title">Operasi</h2>
+      <div class="op-grid">
+        <label class="op">
+          <input type="checkbox" name="op" value="add" checked />
+          <span class="op-box"><b>+</b><i>Tambah</i></span>
+        </label>
+        <label class="op">
+          <input type="checkbox" name="op" value="sub" checked />
+          <span class="op-box"><b>&minus;</b><i>Kurang</i></span>
+        </label>
+        <label class="op">
+          <input type="checkbox" name="op" value="mul" checked />
+          <span class="op-box"><b>&times;</b><i>Kali</i></span>
+        </label>
+        <label class="op">
+          <input type="checkbox" name="op" value="div" checked />
+          <span class="op-box"><b>&divide;</b><i>Bagi</i></span>
+        </label>
+      </div>
+      <label class="op wide" id="mixedBox">
+        <input type="checkbox" id="mixed" />
+        <span class="op-box"><b>&#9751;</b><i>Campur (acak semua)</i></span>
+      </label>
+    </section>
+
+    <section class="group">
+      <h2 class="group-title">Tingkat angka</h2>
+      <div class="seg" id="levelSeg">
+        <button type="button" data-level="1">1 digit</button>
+        <button type="button" data-level="2" class="active">2 digit</button>
+        <button type="button" data-level="3">3 digit</button>
+      </div>
+    </section>
+
+    <section class="group">
+      <h2 class="group-title">Mode jawaban</h2>
+      <div class="seg" id="modeSeg">
+        <button type="button" data-mode="choice" class="active">Pilihan Ganda</button>
+        <button type="button" data-mode="type">Isi Sendiri</button>
+      </div>
+      <label class="switch" id="autoNextRow" hidden>
+        <input type="checkbox" id="autoNext" checked />
+        <span class="track"><span class="knob"></span></span>
+        <span class="switch-label">Otomatis lanjut</span>
+      </label>
+      <p class="hint" id="modeHint">Klik salah satu pilihan. Salah = kartu merah &amp; kamu stuck di soal itu.</p>
+    </section>
+
+    <section class="group">
+      <h2 class="group-title">Aturan</h2>
+      <label class="switch">
+        <input type="checkbox" id="endOnWrong" checked />
+        <span class="track"><span class="knob"></span></span>
+        <span class="switch-label">Selesai saat salah</span>
+      </label>
+      <p class="hint">Jika mati, salah menjawab tetap “stuck” di soal itu sampai kamu menemukan jawaban yang benar.</p>
+    </section>
+
+    <div class="sidebar-actions">
+      <button class="btn primary" id="startBtn">Mulai Latihan</button>
+      <button class="btn ghost" id="pauseBtn" disabled>⏸ Jeda</button>
+      <button class="btn ghost" id="stopBtn" disabled>Selesai &amp; Lihat Hasil</button>
+    </div>
+  </aside>
+
+  <!-- ================= STAGE ================= -->
+  <main class="stage">
+    <header class="hud">
+      <div class="hud-item">
+        <span class="hud-label" id="timerLabel">Waktu</span>
+        <span class="hud-value timer" id="timer" role="timer">00:00.0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Benar</span>
+        <span class="hud-value good" id="hudCorrect">0</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">Salah</span>
+        <span class="hud-value bad" id="hudWrong">0</span>
+      </div>
+      <div class="hud-item wide-hud">
+        <span class="hud-label">Soal</span>
+        <span class="hud-value" id="hudIndex">—</span>
+      </div>
+    </header>
+
+    <section class="board">
+      <div class="question-card" id="questionCard">
+        <span class="q-tag" id="qTag">Tambah</span>
+        <div class="question" id="question">10 + 10</div>
+      </div>
+
+      <div class="answers" id="answers"></div>
+
+      <div class="type-box" id="typeBox" hidden>
+        <input
+          class="type-input"
+          id="answerInput"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          size="1"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          maxlength="6"
+          placeholder="?"
+          aria-label="Ketik jawabanmu"
+        />
+        <button class="btn primary submit-btn" id="submitBtn">Cek</button>
+      </div>
+
+      <p class="kbd-hint" id="kbdHint">Tekan <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> atau klik jawaban</p>
+    </section>
+
+    <!-- Overlay: siap mulai -->
+    <div class="overlay" id="startOverlay">
+      <div class="overlay-card">
+        <h2>Siap latihan?</h2>
+        <p>Pilih operasi di sebelah kiri, lalu tekan <b>Mulai Latihan</b>. Timer mulai berjalan dan soal akan terus berlanjut sampai kamu salah (atau tekan <b>Selesai</b>).</p>
+        <button class="btn primary big" id="overlayStart">Mulai</button>
+      </div>
+    </div>
+
+    <!-- Overlay: jeda -->
+    <div class="overlay" id="pauseOverlay">
+      <div class="overlay-card">
+        <h2>Istirahat sejenak</h2>
+        <p>Timer dihentikan sementara. Tekan <b>Lanjut</b>, tombol <b>Space</b>, atau <b>P</b> untuk melanjutkan dari soal yang sama.</p>
+        <button class="btn primary big" id="resumeBtn">Lanjut</button>
+      </div>
+    </div>
+
+    <!-- Overlay: hasil -->
+    <div class="overlay" id="resultOverlay">
+      <div class="overlay-card result-card">
+        <h2 id="resultTitle">Selesai!</h2>
+        <p class="result-sub" id="resultSub">Ringkasan latihanmu</p>
+        <div class="result-grid">
+          <div class="result-cell">
+            <span class="rc-label">Total Benar</span>
+            <span class="rc-value" id="rCorrect">0</span>
+            <span class="rc-unit">soal</span>
+          </div>
+          <div class="result-cell">
+            <span class="rc-label">Waktu Tercepat</span>
+            <span class="rc-value" id="rFastest">—</span>
+            <span class="rc-unit" id="rFastestNote">belum ada</span>
+          </div>
+          <div class="result-cell">
+            <span class="rc-label">Total Waktu</span>
+            <span class="rc-value" id="rTotal">0 dtk</span>
+            <span class="rc-unit" id="rAvg">rata-rata —</span>
+          </div>
+          <div class="result-cell">
+            <span class="rc-label">Jawaban Salah</span>
+            <span class="rc-value" id="rWrong">0</span>
+            <span class="rc-unit" id="rAcc">akurasi 100%</span>
+          </div>
+        </div>
+        <div class="result-extra" id="rSpeed"></div>
+
+        <div class="share">
+          <span class="share-title">Teks hasil untuk dibagikan</span>
+          <textarea
+            class="share-text"
+            id="shareText"
+            rows="5"
+            spellcheck="false"
+            aria-label="Teks hasil latihanmu, bisa disunting"
+          ></textarea>
+          <div class="share-actions">
+            <button class="btn primary" id="copyBtn">Salin Hasil</button>
+            <button class="btn ghost" id="shareBtn" hidden>Bagikan</button>
+          </div>
+          <p class="share-status" id="shareStatus" role="status"></p>
+        </div>
+
+        <button class="btn primary big" id="againBtn">Main Lagi</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
