@@ -32,7 +32,7 @@ body {
   line-height: 1.5;
 }
 
-/* halaman terkunci: hanya sidebar yang boleh discroll */
+/* locked page: only sidebar scrollable */
 body {
   overflow: hidden;
   overscroll-behavior: none;
@@ -316,7 +316,7 @@ body {
 
 .kbd-hint { color: var(--muted); font-size: 15px; display: flex; align-items: center; gap: 6px; }
 
-/* ==================== MODE ISI SENDIRI ==================== */
+/* ==================== TYPE ANSWER MODE ==================== */
 .type-box {
   display: flex;
   gap: 12px;
@@ -421,7 +421,7 @@ kbd {
 .rc-unit { font-size: 15px; color: var(--muted); }
 .result-extra { color: var(--muted); font-size: 17px; margin-bottom: 24px; }
 
-/* ==================== BAGIKAN HASIL ==================== */
+/* ==================== SHARE RESULTS ==================== */
 .share {
   text-align: left;
   padding: 18px;
@@ -468,7 +468,7 @@ kbd {
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 900px) {
-  /* di HP/mobile halaman_flow normal, tidak terkunci */
+  /* mobile: normal page flow, not locked */
   body { overflow: auto; overscroll-behavior: auto; }
   .app { grid-template-columns: 1fr; height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible; }
   .sidebar { border-right: 0; border-bottom: 1px solid var(--line); overflow: visible; }

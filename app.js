@@ -1,17 +1,17 @@
 'use strict';
 
 /* =========================================================
-   FastMath — latihan hitung cepat
-   Mode jawaban: Pilihan Ganda / Isi Sendiri (ketik angka)
+   FastMath — quick calculation practice
+   Answer mode: Multiple Choice / Type Answer (type number)
    ========================================================= */
 
 const $ = (sel) => document.querySelector(sel);
 
 const OPS = {
-  add: { symbol: '+', label: 'Tambah' },
-  sub: { symbol: '−', label: 'Kurang' },
-  mul: { symbol: '×', label: 'Kali' },
-  div: { symbol: '÷', label: 'Bagi' },
+  add: { symbol: '+', label: 'Add' },
+  sub: { symbol: '−', label: 'Subtract' },
+  mul: { symbol: '×', label: 'Multiply' },
+  div: { symbol: '÷', label: 'Divide' },
 };
 
 const RANGE = {
@@ -75,7 +75,7 @@ const state = {
   autoNext: true,
   endOnWrong: true,
   question: null,
-  locked: new Set(), // pilihan salah (indeks) / nilai salah (teks)
+  locked: new Set(), // wrong options (index) / wrong values (text)
   stats: null,
   totalStart: 0,
   qStart: 0,
@@ -112,9 +112,9 @@ function fmtClock(ms) {
   return `${String(m).padStart(2, '0')}:${s.toFixed(1).padStart(4, '0')}`;
 }
 
-const fmtSeconds = (ms) => `${(ms / 1000).toFixed(1)} dtk`;
+const fmtSeconds = (ms) => `${(ms / 1000).toFixed(1)} sec`;
 
-/* waktu berjalan, durasi jeda tidak ikut dihitung */
+/* running time, pause duration not counted */
 function elapsed() {
   const frozen = state.paused ? performance.now() - state.pauseAt : 0;
   return Math.max(0, performance.now() - state.totalStart - state.pausedTotal - frozen);
@@ -127,26 +127,26 @@ function qElapsed() {
 
 const canFocus = () => window.matchMedia('(pointer: fine)').matches;
 
-/* ---------------- teks hasil untuk dibagikan ---------------- */
+/* ---------------- result text for sharing ---------------- */
 
-const OP_WORDS = { add: 'penjumlahan', sub: 'pengurangan', mul: 'perkalian', div: 'pembagian' };
-const DIGIT_WORDS = { 1: 'satu digit', 2: 'dua digit', 3: 'tiga digit' };
+const OP_WORDS = { add: 'addition', sub: 'subtraction', mul: 'multiplication', div: 'division' };
+const DIGIT_WORDS = { 1: '1 digit', 2: '2 digits', 3: '3 digits' };
 
-/* angka gaya Indonesia: koma sebagai pemisah desimal */
-function idNum(value) {
-  return value.toFixed(1).replace('.', ',');
+/* English number style: dot as decimal separator */
+function enNum(value) {
+  return value.toFixed(1).replace('.', '.');
 }
 
-function idDuration(ms) {
+function enDuration(ms) {
   const s = ms / 1000;
-  if (s < 60) return `${idNum(s)} detik`;
+  if (s < 60) return `${enNum(s)} sec`;
   const m = Math.floor(s / 60);
-  return `${m} menit ${idNum(s - m * 60)} detik`;
+  return `${m} min ${enNum(s - m * 60)} sec`;
 }
 
-/* "penjumlahan" / "penjumlahan & pengurangan" / "campuran operasi hitung" */
+/* "addition" / "addition & subtraction" / "mixed arithmetic" */
 function describeTopic(ops, mixed) {
-  if (mixed || ops.length === 4) return 'campuran operasi hitung';
+  if (mixed || ops.length === 4) return 'mixed arithmetic';
   const list = ops.map((o) => OP_WORDS[o] || o);
   if (list.length === 1) return list[0];
   if (list.length === 2) return `${list[0]} & ${list[1]}`;
@@ -156,40 +156,40 @@ function describeTopic(ops, mixed) {
 function buildShareText(s, totalMs) {
   const ops = selectedOps();
   const topic = describeTopic(ops, el.mixed.checked);
-  const digit = DIGIT_WORDS[state.level] || `${state.level} digit`;
+  const digit = DIGIT_WORDS[state.level] || `${state.level} digits`;
   const lines = [];
 
-  const jumlah = `${s.correct} soal`;
-  lines.push(`Hi, saya baru saja menyelesaikan ${jumlah} ${topic} ${digit} di FastMath.`);
+  const total = `${s.correct} questions`;
+  lines.push(`Hi, I just finished ${total} ${topic} (${digit}) on FastMath.`);
 
   if (s.correct === 0) {
-    lines.push(`Waktu ${idDuration(totalMs)}, tapi belum ada jawaban benar — swingati lagi ya!`);
+    lines.push(`Time ${enDuration(totalMs)}, but no correct answers yet — try again!`);
     return lines.join('\n');
   }
 
-  const bagian = [
-    `Total waktu ${idDuration(totalMs)}`,
-    `rata-rata 1 soal ${idDuration(totalMs / s.correct)}`,
+  const parts = [
+    `Total time ${enDuration(totalMs)}`,
+    `avg 1 question ${enDuration(totalMs / s.correct)}`,
   ];
-  if (s.fastest !== null) bagian.push(`tercepat ${idDuration(s.fastest)}`);
-  lines.push(`${bagian.join(', ')}.`);
+  if (s.fastest !== null) parts.push(`fastest ${enDuration(s.fastest)}`);
+  lines.push(`${parts.join(', ')}.`);
 
   if (s.wrong === 0) {
-    if (s.correct >= 50) lines.push(`Gila, ${jumlah} tanpa henti dan tanpa satu pun kesalahan! 🔥`);
-    else if (s.correct >= 25) lines.push('Mantap, tanpa satu pun kesalahan! 🔥');
-    else lines.push('Sempurna, tanpa satu pun kesalahan! 🔥');
+    if (s.correct >= 50) lines.push(`Crazy, ${total} with zero mistakes! 🔥`);
+    else if (s.correct >= 25) lines.push('Awesome, zero mistakes! 🔥');
+    else lines.push('Perfect, zero mistakes! 🔥');
   } else {
     lines.push(
-      `Berhenti di soal ke-${s.correct + 1} karena ${s.wrong} jawaban salah. ` +
-        (s.correct >= 20 ? 'Progresnya tetap bagus kok!' : 'Latihan lagi besok ya!')
+      `Stopped at question ${s.correct + 1} because of ${s.wrong} wrong answers. ` +
+        (s.correct >= 20 ? 'Still great progress!' : 'Practice again tomorrow!')
     );
   }
 
-  lines.push('#FastMath #HitungCepat');
+  lines.push('#FastMath #QuickMath');
   return lines.join('\n');
 }
 
-/* ---------------- pengaturan ---------------- */
+/* ---------------- settings ---------------- */
 
 function selectedOps() {
   if (el.mixed.checked) return Object.keys(OPS);
@@ -211,7 +211,7 @@ function saveSettings() {
       })
     );
   } catch (_) {
-    /* storage tidak tersedia — abaikan */
+    /* storage unavailable — ignore */
   }
 }
 
@@ -238,7 +238,7 @@ function loadSettings() {
       }
     }
   } catch (_) {
-    /* abaikan */
+    /* ignore */
   }
 }
 
@@ -259,16 +259,16 @@ function setMode(mode, persist = true) {
   el.answerInput.disabled = state.paused || state.screen !== 'playing';
 
   el.kbdHint.innerHTML = type
-    ? 'Ketik angka lalu <kbd>Enter</kbd><span class="kbd-spacer"></span><span>atau otomatis lanjut</span>'
-    : 'Tekan <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> atau klik jawaban';
+    ? 'Type number then <kbd>Enter</kbd><span class="kbd-spacer"></span><span>or auto advance</span>'
+    : 'Press <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> or click an answer';
   el.modeHint.textContent = type
-    ? 'Tulis jawabannya. Salah = kartu merah & kamu stuck di soal itu sampai ketik yang benar.'
-    : 'Klik salah satu pilihan. Salah = kartu merah & kamu stuck di soal itu.';
+    ? 'Type the answer. Wrong = red card & you stay on that question until you type correctly.'
+    : 'Click one option. Wrong = red card & you stay on that question.';
 
   if (persist) saveSettings();
 }
 
-/* ---------------- soal ---------------- */
+/* ---------------- questions ---------------- */
 
 function buildQuestion(op, r) {
   let a, b, ans;
@@ -290,7 +290,7 @@ function buildQuestion(op, r) {
       ans = a * b;
       break;
     default: {
-      // div: pastikan hasil bagi selalu tepat
+      // div: ensure division result is exact
       b = randInt(r.divLo, r.divHi);
       const c = randInt(r.divLo, r.divHi);
       a = b * c;
@@ -341,7 +341,7 @@ function nextQuestion() {
   state.question = q;
   state.locked = new Set();
   renderQuestion();
-  // kalau sedang dijeda, waktu soal baru dihitung mulai dari saat jeda dibuka
+  // if paused, new question timer starts when pause is lifted
   state.qStart = state.paused ? state.pauseAt : performance.now();
   state.qPausedMs = 0;
 }
@@ -375,7 +375,7 @@ function renderQuestion() {
   }
 }
 
-/* ---------------- menjawab ---------------- */
+/* ---------------- answering ---------------- */
 
 function markCorrect(btn) {
   const run = state.runId;
@@ -412,7 +412,7 @@ function markWrong() {
   el.hudIndex.textContent = String(state.stats.correct);
 
   el.questionCard.classList.remove('wrong');
-  void el.questionCard.offsetWidth; // ulang animasi
+  void el.questionCard.offsetWidth; // restart animation
   el.questionCard.classList.add('wrong');
 
   if (state.endOnWrong) {
@@ -438,7 +438,7 @@ function onAnswer(index) {
   }
 }
 
-/* --- mode "Isi Sendiri" --- */
+/* --- "Type Answer" mode --- */
 
 function cleanInput() {
   const raw = el.answerInput.value.replace(/\D/g, '').slice(0, MAX_DIGITS);
@@ -462,7 +462,7 @@ function submitTyped() {
   if (Number(raw) === q.ans) {
     markCorrect(null);
   } else if (state.locked.has(raw)) {
-    // nilai salah yang sama diulang: jangan dihitung dua kali
+    // same wrong value repeated: don't count twice
     el.answerInput.value = '';
     el.answerInput.classList.remove('is-wrong');
     void el.answerInput.offsetWidth;
@@ -475,7 +475,7 @@ function submitTyped() {
   }
 }
 
-/* ---------------- alur permainan ---------------- */
+/* ---------------- game flow ---------------- */
 
 function tick() {
   if (state.screen !== 'playing' || state.paused) return;
@@ -494,7 +494,7 @@ function start() {
 
   el.timer.textContent = '00:00.0';
   el.timer.classList.remove('paused');
-  el.timerLabel.textContent = 'Waktu';
+  el.timerLabel.textContent = 'Time';
   el.hudCorrect.textContent = '0';
   el.hudWrong.textContent = '0';
   el.hudIndex.textContent = '0';
@@ -502,7 +502,7 @@ function start() {
   el.startOverlay.classList.remove('show');
   el.resultOverlay.classList.remove('show');
   el.pauseOverlay.classList.remove('show');
-  el.pauseBtn.textContent = '⏸ Jeda';
+  el.pauseBtn.textContent = '⏸ Pause';
   el.stopBtn.disabled = false;
   el.pauseBtn.disabled = false;
   el.answerInput.classList.remove('is-right', 'is-wrong');
@@ -520,10 +520,10 @@ function pause() {
   state.pauseAt = performance.now();
 
   clearInterval(state.timerId);
-  el.pauseBtn.textContent = '▶ Lanjut';
+  el.pauseBtn.textContent = '▶ Resume';
   el.pauseOverlay.classList.add('show');
   el.timer.classList.add('paused');
-  el.timerLabel.textContent = 'Dijeda';
+  el.timerLabel.textContent = 'Paused';
   el.questionCard.classList.add('dimmed');
   for (const b of el.answers.children) b.disabled = true;
   el.answerInput.disabled = true;
@@ -537,10 +537,10 @@ function resume() {
   state.paused = false;
 
   state.timerId = setInterval(tick, 100);
-  el.pauseBtn.textContent = '⏸ Jeda';
+  el.pauseBtn.textContent = '⏸ Pause';
   el.pauseOverlay.classList.remove('show');
   el.timer.classList.remove('paused');
-  el.timerLabel.textContent = 'Waktu';
+  el.timerLabel.textContent = 'Time';
   el.questionCard.classList.remove('dimmed');
 
   const resolved = isTypeMode() ? el.answerInput.classList.contains('is-right') : false;
@@ -573,37 +573,37 @@ function finish() {
   el.stopBtn.disabled = true;
   el.pauseBtn.disabled = true;
   el.pauseOverlay.classList.remove('show');
-  el.pauseBtn.textContent = '⏸ Jeda';
+  el.pauseBtn.textContent = '⏸ Pause';
   el.timer.classList.remove('paused');
-  el.timerLabel.textContent = 'Waktu';
+  el.timerLabel.textContent = 'Time';
   el.questionCard.classList.remove('dimmed');
   el.answerInput.disabled = true;
-  el.startBtn.textContent = 'Mulai Ulang';
+  el.startBtn.textContent = 'Restart';
 
   el.rCorrect.textContent = String(s.correct);
   el.rFastest.textContent = s.fastest === null ? '—' : fmtSeconds(s.fastest);
-  el.rFastestNote.textContent = s.fastest === null ? 'belum ada' : `untuk ${s.fastestText}`;
+  el.rFastestNote.textContent = s.fastest === null ? 'none yet' : `for ${s.fastestText}`;
   el.rTotal.textContent = fmtSeconds(totalMs);
-  el.rAvg.textContent = s.correct ? `rata-rata ${fmtSeconds(totalMs / s.correct)} / soal` : 'rata-rata —';
+  el.rAvg.textContent = s.correct ? `avg ${fmtSeconds(totalMs / s.correct)} / question` : 'avg —';
   el.rWrong.textContent = String(s.wrong);
-  el.rAcc.textContent = totalAnswers ? `akurasi ${Math.round((s.correct / totalAnswers) * 100)}%` : 'akurasi —';
+  el.rAcc.textContent = totalAnswers ? `accuracy ${Math.round((s.correct / totalAnswers) * 100)}%` : 'accuracy —';
 
   if (s.correct === 0) {
-    el.resultTitle.textContent = 'Belum ada jawaban benar';
-    el.resultSub.textContent = 'Coba lagi — jawab soal pertama dengan benar!';
+    el.resultTitle.textContent = 'No correct answers yet';
+    el.resultSub.textContent = 'Try again — answer the first question correctly!';
     el.rSpeed.textContent = '';
   } else {
     const perMin = (s.correct / (totalMs / 60000)).toFixed(1);
-    el.resultTitle.textContent = 'Selesai!';
-    el.resultSub.textContent = totalAnswers > s.correct ? 'Keren — kamu bertahan sampai salah.' : 'Sempurna, nol kesalahan!';
-    el.rSpeed.textContent = `Kecepatan rata-rata ${perMin} soal per menit`;
+    el.resultTitle.textContent = 'Done!';
+    el.resultSub.textContent = totalAnswers > s.correct ? 'Great — you lasted until a wrong answer.' : 'Perfect, zero mistakes!';
+    el.rSpeed.textContent = `Average speed ${perMin} questions per minute`;
   }
 
   fillShare(totalMs);
   el.resultOverlay.classList.add('show');
 }
 
-/* ---------------- bagikan hasil ---------------- */
+/* ---------------- share results ---------------- */
 
 function fillShare(totalMs) {
   el.shareText.value = buildShareText(state.stats, totalMs);
@@ -624,10 +624,10 @@ async function copyText(text) {
       await navigator.clipboard.writeText(text);
       return true;
     } catch (_) {
-      /* lanjut ke cara manual */
+      /* fall through to manual */
     }
   }
-  // cara manual: penting untuk dibuka langsung dari file:// (bukan secure context)
+  // manual method: important when opened directly from file:// (not secure context)
   const ta = document.createElement('textarea');
   ta.value = text;
   ta.setAttribute('readonly', '');
@@ -650,11 +650,11 @@ el.copyBtn.addEventListener('click', async () => {
   if (!text) return;
   const okCopy = await copyText(text);
   if (okCopy) {
-    setShareStatus('Tersalin! Tinggal tempel di Instagram, WhatsApp, atau X.');
+    setShareStatus('Copied! Just paste to Instagram, WhatsApp, or X.');
   } else {
     el.shareText.focus();
     el.shareText.select();
-    setShareStatus('Browser menolak menyalin otomatis — teksnya sudah dipilih, tekan Ctrl+C / Cmd+C.', true);
+    setShareStatus('Browser blocked auto-copy — text is selected, press Ctrl+C / Cmd+C.', true);
   }
 });
 
@@ -663,16 +663,16 @@ el.shareBtn.addEventListener('click', async () => {
   if (!text) return;
   try {
     await navigator.share({ text });
-    setShareStatus('Terkirim!');
+    setShareStatus('Shared!');
   } catch (err) {
-    if (err && err.name === 'AbortError') return; // dibatalkan user
-    setShareStatus('Gagal mengirim — pakai "Salin Hasil" ya.', true);
+    if (err && err.name === 'AbortError') return; // user cancelled
+    setShareStatus('Failed to share — use "Copy Result" instead.', true);
   }
 });
 
 el.shareText.addEventListener('focus', () => el.shareText.select());
 
-/* ---------------- event ---------------- */
+/* ---------------- events ---------------- */
 
 el.startBtn.addEventListener('click', start);
 el.overlayStart.addEventListener('click', start);
@@ -719,7 +719,7 @@ el.answerInput.addEventListener('keydown', (e) => {
 });
 el.submitBtn.addEventListener('click', submitTyped);
 
-// klik area soal memfokuskan kolom isian
+// clicking question area focuses input box
 el.questionCard.addEventListener('click', () => {
   if (isTypeMode() && state.screen === 'playing' && !state.paused && canFocus()) {
     el.answerInput.focus({ preventScroll: true });
@@ -751,7 +751,7 @@ document.addEventListener('keydown', (e) => {
   if (state.screen !== 'playing' || state.paused) return;
 
   if (isTypeMode()) {
-    // angka tetap masuk ke kolom isian walau fokus terambil
+    // digits still go to input even if focus taken away
     if (/^\d$/.test(e.key) && document.activeElement !== el.answerInput && canFocus()) {
       el.answerInput.value += e.key;
       el.answerInput.focus({ preventScroll: true });
